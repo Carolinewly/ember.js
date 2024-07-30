@@ -18,13 +18,18 @@ const testDependencies = ['qunit', 'vite'];
 
 export default [
   esmConfig(),
-  legacyBundleConfig('./broccoli/amd-compat-entrypoints/ember.debug.js', 'ember.debug.js', true),
-  legacyBundleConfig('./broccoli/amd-compat-entrypoints/ember.debug.js', 'ember.prod.js', false),
-  legacyBundleConfig(
-    './broccoli/amd-compat-entrypoints/ember-testing.js',
-    'ember-testing.js',
-    true
-  ),
+  legacyBundleConfig('./broccoli/amd-compat-entrypoints/ember.debug.js', 'ember.debug.js', {
+    isDeveloping: true,
+  }),
+  legacyBundleConfig('./broccoli/amd-compat-entrypoints/ember.debug.js', 'ember.prod.js', {
+    isDeveloping: false,
+  }),
+  legacyBundleConfig('./broccoli/amd-compat-entrypoints/ember-testing.js', 'ember-testing.js', {
+    isDeveloping: true,
+    isExternal(source) {
+      return !source.startsWith('ember-testing');
+    },
+  }),
   templateCompilerConfig(),
 ];
 
@@ -57,7 +62,7 @@ function esmConfig() {
       }),
       resolveTS(),
       version(),
-      resolvePackages(exposedDependencies(), hiddenDependencies()),
+      resolvePackages({ ...exposedDependencies(), ...hiddenDependencies() }),
       pruneEmptyBundles(),
     ],
   };
@@ -67,7 +72,7 @@ function renameEntrypoints(entrypoints, fn) {
   return Object.fromEntries(Object.entries(entrypoints).map(([k, v]) => [fn(k), v]));
 }
 
-function legacyBundleConfig(input, output, isDeveloping) {
+function legacyBundleConfig(input, output, { isDeveloping, isExternal }) {
   let babelConfig = { ...sharedBabelConfig };
 
   babelConfig.plugins = [...babelConfig.plugins, buildDebugMacroPlugin(isDeveloping)];
@@ -87,6 +92,10 @@ function legacyBundleConfig(input, output, isDeveloping) {
       // modules and hands them to our classic AMD loader. All of those modules
       // need the __esModule marker too.
       freeze: false,
+
+      globals: (id) => {
+        return `require('${id}').default`;
+      },
     },
     plugins: [
       amdDefineSupport(),
@@ -99,7 +108,7 @@ function legacyBundleConfig(input, output, isDeveloping) {
       }),
       resolveTS(),
       version(),
-      resolvePackages(exposedDependencies(), hiddenDependencies()),
+      resolvePackages({ ...exposedDependencies(), ...hiddenDependencies() }, isExternal),
       licenseAndLoader(),
     ],
   };
@@ -272,7 +281,7 @@ function resolveTS() {
   };
 }
 
-export function resolvePackages(...depsList) {
+export function resolvePackages(deps, isExternal) {
   return {
     enforce: 'pre',
     name: 'resolve-packages',
@@ -289,10 +298,12 @@ export function resolvePackages(...depsList) {
           return { external: true, id: pkgName };
         }
 
-        for (let deps of depsList) {
-          if (deps[source]) {
-            return deps[source];
-          }
+        if (isExternal?.(source)) {
+          return { external: true, id: source };
+        }
+
+        if (deps[source]) {
+          return deps[source];
         }
 
         let candidateStem = resolve(projectRoot, 'packages', source);
@@ -431,7 +442,7 @@ function templateCompilerConfig() {
   let config = legacyBundleConfig(
     './broccoli/amd-compat-entrypoints/ember-template-compiler.js',
     'ember-template-compiler.js',
-    true
+    { isDeveloping: true }
   );
   config.plugins.unshift({
     enforce: 'pre',
