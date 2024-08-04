@@ -24,7 +24,7 @@
     "@glimmer/util": "0.92.0",
     "@glimmer/validator": "0.92.0",
     "dag-map": "^2.0.2",
-    "expect-type": "^0.15.0",
+    "expect-type": "^0.19.0",
     "internal-test-helpers": "workspace:*",
     "router_js": "^8.0.5"
   }
