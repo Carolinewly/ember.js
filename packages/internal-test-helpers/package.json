@@ -30,7 +30,7 @@
     "@glimmer/manager": "0.92.0",
     "@glimmer/opcode-compiler": "0.92.0",
     "@glimmer/owner": "0.92.0",
-    "@glimmer/runtime": "0.92.0",
+    "@glimmer/runtime": "0.94.11",
     "@glimmer/syntax": "0.92.0",
     "@glimmer/util": "0.92.0",
     "@glimmer/validator": "0.92.0",
