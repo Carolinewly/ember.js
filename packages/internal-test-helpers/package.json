@@ -31,7 +31,7 @@
     "@glimmer/opcode-compiler": "0.92.0",
     "@glimmer/owner": "0.92.0",
     "@glimmer/runtime": "0.92.0",
-    "@glimmer/syntax": "0.92.0",
+    "@glimmer/syntax": "0.95.0",
     "@glimmer/util": "0.92.0",
     "@glimmer/validator": "0.92.0",
     "backburner.js": "^2.7.0",
